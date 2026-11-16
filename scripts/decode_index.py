@@ -1,5 +1,45 @@
 #!/usr/bin/env python3
-"""Build dual-strand 2-base (G/T) reference and STAR index for DECODE."""
+"""
+DECODE Reference Indexing: Dual-Strand 2-Base (G/T) Reference & STAR Index
+==========================================================================
+
+Overview
+--------
+Chemical deamination probing converts purines bidirectionally (A <-> G) and
+pyrimidines unidirectionally (C -> T/U). Projecting sequences into a 2-base
+purine/pyrimidine alphabet ({A, G} -> G; {C, T, U} -> T) eliminates transition
+mismatch penalties during alignment.
+
+Because the Watson-Crick reverse complement of {G, T} is {C, A} rather than
+{G, T}, standard reverse-strand search in aligners cannot match 2-base reads
+against antisense transcripts. This script solves that by explicitly building
+a dual-strand reference containing both forward (`<contig>_fwd`) and reverse-
+complemented (`<contig>_rev`) sequences oriented 5' -> 3' in G/T space.
+
+Generated Index Artifacts (`--outdir`)
+--------------------------------------
+- `reference_2base_GT_dual.fa`  Dual-strand 2-base (G/T) FASTA indexed by STAR
+- `reference_4base_dual.fa`     Dual-strand 4-base (A/C/G/T) FASTA used by
+                                `decode_align.py` and `decode_call.py` for
+                                4-base restoration and mutation calling
+- `chrom.sizes`                 Contig lengths for all _fwd and _rev entries
+- `annotation_dual.gtf`         Strand-projected GTF (if `--gtf` is provided)
+- `STAR_index/`                 Compiled STAR genome/transcriptome index
+
+Usage Examples
+--------------
+1. Target RNA or viral genome (FASTA only):
+    python scripts/decode_index.py \
+        --fasta test_data/hsrRNA.fa \
+        --outdir decode_idx
+
+2. Full genome or transcriptome with splice-junction annotation (FASTA + GTF):
+    python scripts/decode_index.py \
+        --fasta GRCh38.primary_assembly.genome.fa.gz \
+        --gtf gencode.v33.primary_assembly.annotation.gtf.gz \
+        --threads 16 \
+        --outdir hg38_decode_idx
+"""
 
 import argparse
 import gzip
